@@ -1,9 +1,6 @@
-# Imports like pygame
+from random import choice
+from time import sleep
 
-# Global variable
-winning: bool = True
-
-# TODO One: Make the Game Board
 def game_board_maker(game_board: list[str]) -> None:
     count: int = 1
     for i in game_board:
@@ -16,18 +13,19 @@ def game_board_maker(game_board: list[str]) -> None:
         count += 1
     print()
 
-# TODO Two: Rules -> Suggestion: make three functions
-    # TODO 1.1: (Win) Horizontally
-def check_horizontally(game_board: list[str]) -> str:
-    for row in range(0, 9, 3):  # Loop over 0, 3, 6 (start indices of rows)
-        if game_board[row] == game_board[row + 1] == game_board[row + 2] != "   ":
-            return f"Player {game_board[row].strip()} is the winner" # Return the winner (either 'X' or 'O')
-    return "Tie"
 
-    # TODO 1.1: (Win) Vertically
-    # TODO 1.1: (Win) Diagonally
+def check_winner(board: list[str]) -> str | None:
+    lines: list[tuple[int, int, int]] = [
+        (0, 1, 2), (3, 4, 5), (6, 7, 8),      # rows
+        (0, 3, 6), (1, 4, 7), (2, 5, 8),      # cols
+        (0, 4, 8), (2, 4, 6)                  # diagonals
+    ]
+    for a, b, c in lines:
+        if board[a] == board[b] == board[c] != "   ":
+            return board[a].strip()  # "X" or "O"
+    return None
 
-# TODO Three: function for player -> I need input ("X" and "O")
+
 def user() -> tuple[str,int] | None:
     """
     Prompts the user to choose a move for Tic Tac Toe by entering a number (1-9)
@@ -65,21 +63,29 @@ def user() -> tuple[str,int] | None:
         return player_sign, player_index
 
 
-# TODO Four: Computer can play against human - Bot that randomly choose from 0 to 8 to fill the empty space
-# TODO Five: Game function -> def game():
-# TODO Six: Use pygame to make the graphic
+def bot(board: list[str], user_choice: str) -> tuple[str, int] | None:
+    """
+    Pick a random empty index and return (bot_sign, bot_index).
+    Returns None if there is no legal move.
+    """
+    empty_idxs: list[int] = [i for i, v in enumerate(board) if v == "   "]
 
-def game()-> None:
+    if not empty_idxs:
+        return None
 
-    print("\nWelcome to Tic Tac Toe")
+    bot_sign: str = "O" if user_choice == "X" else "X"
+    bot_index:int = choice(empty_idxs)
 
-    game_board: list[str] = ["   ", "   ", "   ",
-                             "   ", "   ", "   ",
-                             "   ", "   ", "   "]
+    return bot_sign, bot_index
+
+
+
+def game(game_board: list[str])-> None:
 
     game_board_maker(game_board)
 
-    while True:
+    game_limit: int = 1
+    while game_limit <= 9:
         full_info: tuple[str, int] = user()
         player_sign: str = full_info[0]
         player_index: int = full_info[1]
@@ -93,7 +99,14 @@ def game()-> None:
         game_board_maker(game_board)
 
         # Add win check or tie check here
-        check_horizontally(game_board)
+        winner = check_winner(game_board)
+        if winner:
+            print(f"Player {winner} is the winner!")
+            break
+
+        if "   " not in game_board:
+            print("It's a tie!")
+            break
 
     # add a part that ask if they want to continue the game after the game is finished
     # if game_over():
@@ -102,5 +115,71 @@ def game()-> None:
     #     game_board_maker(game_board)
 
 
+def game_with_bot(game_board: list[str]) -> None:
+    print("\nBot will play after you!\n")
+    game_board_maker(game_board)
+
+    while True:
+        # --- Human move ---
+        player_sign, player_index = user()
+
+        if game_board[player_index] != "   ":
+            print("That spot is already taken. Try again.")
+            continue
+
+        game_board[player_index] = f" {player_sign} "
+        game_board_maker(game_board)
+
+        # Check win/tie after human move
+        winner: str | None = check_winner(game_board)
+        if winner:
+            print(f"Player {winner} is the winner!")
+            break
+        if "   " not in game_board:
+            print("It's a tie!")
+            break
+
+        # --- Bot move ---
+        bot_move = bot(game_board, player_sign)
+        if bot_move is None:
+            print("It's a tie!")
+            break
+
+        bot_sign, bot_index = bot_move
+        game_board[bot_index] = f" {bot_sign} "
+
+        sleep(0.5) #delay to answer
+
+        print(f"Bot plays at {bot_index + 1} as {bot_sign}")
+        game_board_maker(game_board)
+
+        # Check win/tie after bot move
+        winner: str | None  = check_winner(game_board)
+        if winner:
+            print(f"Player {winner} is the winner!")
+            break
+        if "   " not in game_board:
+            print("It's a tie!")
+            break
+
+def main() -> None:
+    print("\nWelcome to Tic Tac Toe")
+
+    game_board: list[str] = ["   "] * 9
+
+
+    try:
+        user_choice: int = int(input("Write 1 if you want to play with bot otherwise 2: "))
+    except ValueError:
+        raise "Add number"
+    if user_choice not in [1, 2]:
+        print("write 1 or 2")
+
+    if user_choice == 1:
+        game_with_bot(game_board)
+    else:
+        game(game_board)
+
+# TODO Six: Use pygame to make the graphic
 if __name__ == "__main__":
-    game()
+    main()
