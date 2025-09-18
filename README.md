@@ -27,9 +27,11 @@ This project is a beginner-friendly implementation of the classic game, built to
 ## 📂 Project Structure
 ```
 tic_tac_toe/
+├─ players.py     # player class
+├─ game.py        # Game class
 ├─ main.py        # Main game logic
 ├─ README.md      # Project description
-└─ requirements.txt (optional if you add dependencies)
+└─ requirements.txt
 ```
 
 ## 📖 Future Improvements
