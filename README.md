@@ -33,7 +33,9 @@ tic_tac_toe/
 ├─ ui_cli/
 │  └─ main.py           # Your current terminal game
 ├─ ui_pygame/
-│   └─ main.py           # New Pygame front-end 
+│  ├─ main.py           # New Pygame front-end 
+│  └─ img/
+│     └─ board.jpeg        
 ├─ README.md      # Project description
 └─ requirements.txt
 ```
