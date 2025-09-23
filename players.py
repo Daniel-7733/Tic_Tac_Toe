@@ -72,7 +72,7 @@ class SmartBot(Player):
                 return i
 
         # 2) Block
-        opp = "O" if self.symbol == "X" else "X"
+        opp: str = "O" if self.symbol == "X" else "X"
         for i in empty:
             if would_win(opp, i):
                 return i
