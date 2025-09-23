@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Tuple, Optional
-from players import Player, EMPTY
+from core.players import Player, EMPTY
 
 WIN_LINES: List[Tuple[int, int, int]] = [
     (0, 1, 2), (3, 4, 5), (6, 7, 8),

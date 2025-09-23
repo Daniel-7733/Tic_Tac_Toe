@@ -1,3 +1,4 @@
 pygame
 random
 time
+pygame>=2.5

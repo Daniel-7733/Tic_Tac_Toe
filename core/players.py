@@ -1,6 +1,6 @@
 from __future__ import annotations
-from random import choice
 from typing import List, Tuple
+from random import choice
 from time import sleep
 
 EMPTY: str = "   "

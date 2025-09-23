@@ -1,5 +1,5 @@
-from players import HumanPlayer, RandomBot, SmartBot
-from game import Game
+from core.players import HumanPlayer, RandomBot, SmartBot
+from core.game import Game
 
 def choose_symbol_once() -> str:
     while True:

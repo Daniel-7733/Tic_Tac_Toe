@@ -27,9 +27,13 @@ This project is a beginner-friendly implementation of the classic game, built to
 ## 📂 Project Structure
 ```
 tic_tac_toe/
-├─ players.py     # player class
-├─ game.py        # Game class
-├─ main.py        # Main game logic
+├─ core/
+│  ├─ players.py        # HumanPlayer, RandomBot, SmartBot, base Player, EMPTY constant
+│  └─ game.py           # Game class (board, winner checks, turn order)
+├─ ui_cli/
+│  └─ main.py           # Your current terminal game
+├─ ui_pygame/
+│   └─ main.py           # New Pygame front-end 
 ├─ README.md      # Project description
 └─ requirements.txt
 ```
