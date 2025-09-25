@@ -5,6 +5,9 @@ WIDTH, HEIGHT = 600, 600
 CELL: int = WIDTH // 3
 FPS: int = 60
 
+FG = (0, 0, 0)
+LINE_WIDTH = 6
+
 def cell_from_mouse(pos: Tuple[int, int]) -> int:
     x, y = pos
     c = x // CELL
@@ -15,10 +18,29 @@ def cell_from_mouse(pos: Tuple[int, int]) -> int:
 
 def draw_board(screen: pygame.Surface) -> None:
     # Load and (optionally) scale your board image to fit the window
-    board_img = pygame.image.load("img/board.png").convert()
+    board_img = pygame.image.load("img/GameBackground.jpg").convert()
     board_img = pygame.transform.smoothscale(board_img, (WIDTH, HEIGHT))
     screen.blit(board_img, (0, 0))
     pygame.display.flip()
+
+
+def draw_sign(screen: pygame.Surface) -> None:
+    # Load and (optionally) scale your board image to fit the window
+    board_img = pygame.image.load("img/OShapeEarth.jpg").convert()
+    board_img = pygame.transform.smoothscale(board_img, (70, 70))
+    screen.blit(board_img, (0, 0))
+    pygame.display.flip()
+
+
+def draw_line(screen: pygame.Surface) -> None:
+    # pygame.draw.lines(screen, "black", False, (0.0, 200.0), 1)
+    pygame.draw.line(screen, color=FG, start_pos=(CELL, 0), end_pos=(CELL, HEIGHT), width=LINE_WIDTH)
+    pygame.draw.line(screen, color=FG, start_pos=(2 * CELL, 0), end_pos=(2 * CELL, HEIGHT), width=LINE_WIDTH)
+    pygame.draw.line(screen, color=FG, start_pos=(0, CELL), end_pos=(WIDTH, CELL), width=LINE_WIDTH)
+    pygame.draw.line(screen, color=FG, start_pos=(0, 2 * CELL), end_pos=(WIDTH, 2 * CELL), width=LINE_WIDTH)
+
+    pygame.display.flip()
+
 
 def main() -> None:
     pygame.init()
@@ -26,9 +48,12 @@ def main() -> None:
     pygame.display.set_caption("Tic Tac Toe (Pygame)")
     clock = pygame.time.Clock()
 
-    draw_board(screen)
 
-    running = True
+    draw_board(screen)
+    draw_sign(screen)
+    draw_line(screen)
+
+    running: bool = True
     while running:
         clock.tick(FPS)
         for event in pygame.event.get():
