@@ -28,7 +28,7 @@ def draw_board(screen: pygame.Surface) -> None:
     pygame.display.flip()
 
 
-def draw_sign(screen: pygame.Surface) -> None:
+def upload_sign(screen: pygame.Surface) -> None:
     # Load and (optionally) scale your board image to fit the window
     x_img = pygame.image.load("img/png_OShapeEarth.png").convert_alpha()
     x_img.set_colorkey((255, 255, 255))  # doesn't remove the white space around the picture
@@ -41,6 +41,20 @@ def draw_sign(screen: pygame.Surface) -> None:
     screen.blit(o_img, (500, 200))
 
     pygame.display.flip()
+
+def draw_sign_o(screen: pygame.Surface, cell_index: int) -> None:
+    row, col = divmod(cell_index, 3)
+    cx: int = col * CELL + CELL // 2
+    cy: int = row * CELL + CELL // 2
+    pygame.draw.circle(screen, FG, center=(cx, cy), radius=60, width=LINE_WIDTH)
+
+def draw_sign_x(screen: pygame.Surface, cell_index: int) -> None:
+    row, col = divmod(cell_index, 3)
+    x: int = col * CELL
+    y: int = row * CELL
+    offset: int = 30
+    pygame.draw.line(screen, FG, (x + offset, y + offset), (x + CELL - offset, y + CELL - offset), LINE_WIDTH)
+    pygame.draw.line(screen, FG, (x + offset, y + CELL - offset), (x + CELL - offset, y + offset), LINE_WIDTH)
 
 
 def draw_line(screen: pygame.Surface) -> None:
@@ -59,14 +73,14 @@ def main() -> None:
     pygame.display.set_caption("Tic Tac Toe (Pygame)")
     clock = pygame.time.Clock()
 
-
     draw_board(screen)
-    draw_sign(screen)
+    # upload_sign(screen)
     draw_line(screen)
 
     running: bool = True
     while running:
         clock.tick(FPS)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -75,11 +89,11 @@ def main() -> None:
                 running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                idx = cell_from_mouse(event.pos)
+                idx: int  = cell_from_mouse(event.pos)
                 if idx != -1:
-                    print(f"Clicked cell index: {idx}")  # 0..8
-
-        # No need to redraw every frame yet; board is static for now.
+                    draw_sign_o(screen, idx)
+                    draw_sign_x(screen, idx)
+                    print(f"Clicked cell index: {idx}")
 
     pygame.quit()
 
