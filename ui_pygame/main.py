@@ -72,10 +72,11 @@ def draw_sign_x(screen: pygame.Surface, idx: int) -> None:
     :param idx: This argument get an integer
     :return: None
     """
+
     row, column = divmod(idx, 3)
     x0: int = column * CELL
     y0: int = row * CELL
-    pad: int = 30
+    pad: int = 70
     # two diagonals
     pygame.draw.line(screen, FG, (x0 + pad, y0 + pad), (x0 + CELL - pad, y0 + CELL - pad), LINE_WIDTH)
     pygame.draw.line(screen, FG, (x0 + pad, y0 + CELL - pad), (x0 + CELL - pad, y0 + pad), LINE_WIDTH)
@@ -98,7 +99,12 @@ def cell_from_mouse(position: tuple[int, int]) -> int:
         return row * 3 + column
     return -1
 
-
+from core.game import WIN_LINES
+def winner(board: list[str]) -> str | None: # It doesn't work
+    for a, b, c in WIN_LINES:
+        if board[a] == board[b] == board[c] != " ":
+            return board[a].strip()
+    return None
 # ---------------------------- Executing Game Functions ---------------------------- #
 def main() -> None:
     """
@@ -140,6 +146,7 @@ def main() -> None:
                         board[idx] = "O"
                         turn = "X"
                     print(f"Clicked cell index: {idx}")
+
     pygame.quit()
 
 if __name__ == "__main__":
