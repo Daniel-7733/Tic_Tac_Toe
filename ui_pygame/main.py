@@ -1,13 +1,17 @@
 import pygame
+from core.game import WIN_LINES
 
 
 
 # ---------------------------- Constant Size ---------------------------- #
 WIDTH, HEIGHT = 600, 600
-CELL: int = WIDTH // 3
+MARGIN: int = 50
+INNER = WIDTH - 2 * MARGIN  # space for header/footer
+CELL: int = (WIDTH - (2 * MARGIN)) // 3 # Now each square is smaller (166 instead of 200)
 FPS: int = 60
 LINE_WIDTH: int = 6
-
+# ---------------------------- Constant Space ---------------------------- #
+EMPTY_SPACE: str = " "
 # ---------------------------- Color ---------------------------- #
 BG = (255, 255, 255)
 FG: tuple[int, int, int] = (0, 0, 0)
@@ -29,6 +33,18 @@ def background(screen: pygame.Surface) -> None:
     screen.blit(board_img, (0, 0))
     pygame.display.flip()
 
+# positions for the grid lines (robust even if INNER isn't divisible by 3)
+def edge(k: int) -> int:
+    # k = 0..3 → returns pixel positions of inner edges
+    # round() avoids accumulating truncation when INNER % 3 != 0
+    return MARGIN + round(k * INNER / 3)
+
+def cell_rect(idx: int) -> pygame.Rect:
+    r, c = divmod(idx, 3)
+    left, right = edge(c), edge(c + 1)
+    top,  bottom = edge(r), edge(r + 1)
+    return pygame.Rect(left, top, right - left, bottom - top)
+
 
 def draw_grid(screen: pygame.Surface) -> None:
     """
@@ -39,12 +55,13 @@ def draw_grid(screen: pygame.Surface) -> None:
 
     background(screen)
     # vertical
-    pygame.draw.line(screen, color=FG, start_pos=(CELL, 50), end_pos=(CELL, HEIGHT - 50), width=LINE_WIDTH)
-    pygame.draw.line(screen, color=FG, start_pos=(2 * CELL, 50), end_pos=(2 * CELL, HEIGHT- 50), width=LINE_WIDTH)
-    # horizontal
-    pygame.draw.line(screen, color=FG, start_pos=(50, CELL), end_pos=(WIDTH - 50, CELL ), width=LINE_WIDTH)
-    pygame.draw.line(screen, color=FG, start_pos=(50, 2 * CELL), end_pos=(WIDTH - 50, 2 * CELL), width=LINE_WIDTH)
-
+    # background first (if any), then the grid
+    # verticals
+    pygame.draw.line(screen, FG, (edge(1), edge(0)), (edge(1), edge(3)), LINE_WIDTH)
+    pygame.draw.line(screen, FG, (edge(2), edge(0)), (edge(2), edge(3)), LINE_WIDTH)
+    # horizontals
+    pygame.draw.line(screen, FG, (edge(0), edge(1)), (edge(3), edge(1)), LINE_WIDTH)
+    pygame.draw.line(screen, FG, (edge(0), edge(2)), (edge(3), edge(2)), LINE_WIDTH)
     pygame.display.flip()
 
 
@@ -57,12 +74,11 @@ def draw_sign_o(screen: pygame.Surface, idx: int) -> None:
     :return: None
     """
 
-    row, column = divmod(idx, 3)
-    cx: int = column * CELL + CELL // 2
-    cy: int = row * CELL + CELL // 2
-    radius: int = CELL // 3 - 30
+    rect = cell_rect(idx)
+    cx, cy = rect.center
+    radius: int = min(rect.width, rect.height) // 2 - 14   # padding from cell edges
     pygame.draw.circle(screen, FG, (cx, cy), radius, LINE_WIDTH)
-    pygame.display.update()  # update the screen for this draw
+    pygame.display.update(rect) # update the screen for this draw
 
 
 def draw_sign_x(screen: pygame.Surface, idx: int) -> None:
@@ -73,17 +89,18 @@ def draw_sign_x(screen: pygame.Surface, idx: int) -> None:
     :return: None
     """
 
-    row, column = divmod(idx, 3)
-    x0: int = column * CELL
-    y0: int = row * CELL
-    pad: int = 70
-    # two diagonals
-    pygame.draw.line(screen, FG, (x0 + pad, y0 + pad), (x0 + CELL - pad, y0 + CELL - pad), LINE_WIDTH)
-    pygame.draw.line(screen, FG, (x0 + pad, y0 + CELL - pad), (x0 + CELL - pad, y0 + pad), LINE_WIDTH)
-    pygame.display.update()
+    rect = cell_rect(idx)
+    pad: int = 18  # padding so lines don’t touch the borders
+    pygame.draw.line(screen, FG,
+                     (rect.left + pad,  rect.top + pad),
+                     (rect.right - pad, rect.bottom - pad), LINE_WIDTH)
+    pygame.draw.line(screen, FG,
+                     (rect.left + pad,  rect.bottom - pad),
+                     (rect.right - pad, rect.top + pad), LINE_WIDTH)
+    pygame.display.update(rect)
 
 
-# ---------------------------- Game Functions ---------------------------- #
+# ---------------------------- Game Functions & Rules ---------------------------- #
 def cell_from_mouse(position: tuple[int, int]) -> int:
     """
     This Function will translate the positions, which has two integer, to one integer. The output will be the index of
@@ -93,24 +110,26 @@ def cell_from_mouse(position: tuple[int, int]) -> int:
     """
 
     x, y = position
-    column: int = x // CELL
-    row: int = y // CELL
-    if (0 <= row < 3) and (0 <= column < 3):
-        return row * 3 + column
-    return -1
+    if not (MARGIN <= x <= WIDTH - MARGIN) and (MARGIN <= y <= HEIGHT - MARGIN):
+        return -1
 
-from core.game import WIN_LINES
-def winner(board: list[str]) -> str | None: # It doesn't work
+    column: int = min(2, ((x - edge(0)) * 3) // (edge(3) - edge(0)))
+    row: int = min(2, ((y - edge(0)) * 3) // (edge(3) - edge(0)))
+    return row * 3 + column
+
+def winner(game_board: list[str]) -> str | None: # It doesn't work
     for a, b, c in WIN_LINES:
-        if board[a] == board[b] == board[c] != " ":
-            return board[a].strip()
+        if game_board[a] == game_board[b] == game_board[c] != EMPTY_SPACE:
+            return game_board[a].strip()
     return None
+
 # ---------------------------- Executing Game Functions ---------------------------- #
 def main() -> None:
     """
     Just executing all functions here.
     :return: None
     """
+
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Tic Tac Toe (Pygame)")
@@ -120,10 +139,10 @@ def main() -> None:
     draw_grid(screen)
 
     # simple game state so marks persist visually
-    board: list[str] = [" "] * 9
+    board: list[str] = [EMPTY_SPACE] * 9
     turn: str = "X"  # alternate between X and O
 
-    running = True
+    running: bool = True
     while running:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -134,7 +153,7 @@ def main() -> None:
                 running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                idx = cell_from_mouse(event.pos)
+                idx: int = cell_from_mouse(event.pos)
                 if idx != -1 and board[idx] == " ":
                     # draw once, do NOT redraw the grid afterward
                     if turn == "X":
@@ -146,6 +165,17 @@ def main() -> None:
                         board[idx] = "O"
                         turn = "X"
                     print(f"Clicked cell index: {idx}")
+
+                # ---------- Check the winner or tie ---------- #
+                win: str | None = winner(board)
+                if win: # this one declare winner: X or O
+                    print(f"{win} win!")
+                    running = False
+
+                if EMPTY_SPACE not in board: # This one declare tie
+                    print("It's a tie!")
+                    running = False
+                    continue
 
     pygame.quit()
 
