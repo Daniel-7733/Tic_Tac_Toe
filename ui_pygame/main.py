@@ -1,4 +1,6 @@
 import pygame
+from sqlalchemy import false
+
 from core.game import WIN_LINES
 
 
@@ -15,7 +17,7 @@ EMPTY_SPACE: str = " "
 # ---------------------------- Color ---------------------------- #
 BG = (255, 255, 255)
 FG: tuple[int, int, int] = (0, 0, 0)
-
+BG_PICTURE: str = "img/GameBackground.jpg"
 
 
 
@@ -28,7 +30,7 @@ def background(screen: pygame.Surface) -> None:
     """
 
     # Load and (optionally) scale your board image to fit the window
-    board_img = pygame.image.load("img/GameBackground.jpg").convert()
+    board_img = pygame.image.load(BG_PICTURE).convert()
     board_img = pygame.transform.smoothscale(board_img, (WIDTH, HEIGHT))
     screen.blit(board_img, (0, 0))
     pygame.display.flip()
@@ -102,20 +104,14 @@ def draw_sign_x(screen: pygame.Surface, idx: int) -> None:
 
 # ---------------------------- Game Functions & Rules ---------------------------- #
 def cell_from_mouse(position: tuple[int, int]) -> int:
-    """
-    This Function will translate the positions, which has two integer, to one integer. The output will be the index of
-    game boarder. (From 0 to 8) It won't go beyond the eight and less than the zero
-    :param position: Argument should be tuple which have two integer in it.
-    :return: will return an integer
-    """
-
     x, y = position
-    if not (MARGIN <= x <= WIDTH - MARGIN) and (MARGIN <= y <= HEIGHT - MARGIN):
+    # Use the inner square edges so clicks align with the grid
+    if not (edge(0) <= x <= edge(3) and edge(0) <= y <= edge(3)):
         return -1
+    col: int  = min(2, ((x - edge(0)) * 3) // (edge(3) - edge(0)))
+    row: int  = min(2, ((y - edge(0)) * 3) // (edge(3) - edge(0)))
+    return row * 3 + col
 
-    column: int = min(2, ((x - edge(0)) * 3) // (edge(3) - edge(0)))
-    row: int = min(2, ((y - edge(0)) * 3) // (edge(3) - edge(0)))
-    return row * 3 + column
 
 def winner(game_board: list[str]) -> str | None: # It doesn't work
     for a, b, c in WIN_LINES:
@@ -123,6 +119,23 @@ def winner(game_board: list[str]) -> str | None: # It doesn't work
             return game_board[a].strip()
     return None
 
+def draw_status(screen: pygame.Surface, font: pygame.font.Font, text: str) -> None:
+    # re-blit the background in the header area
+    header_rect = pygame.Rect(0, 0, WIDTH, MARGIN)
+    screen.blit(pygame.transform.smoothscale(
+        pygame.image.load(BG_PICTURE).convert(), (WIDTH, HEIGHT)
+    ), (0, 0), header_rect)
+
+    # render text with transparent background
+    text_surface = font.render(text, False, FG, None)
+    screen.blit(text_surface, (MARGIN, 10))
+    pygame.display.update(header_rect)
+
+
+# ---------------------------- Button ---------------------------- #
+# TODO: Make the reset button that when user press it, game will reset and they can play again.
+# Clean the board: just bring back the first board
+# Button needs to come after the game result.
 # ---------------------------- Executing Game Functions ---------------------------- #
 def main() -> None:
     """
@@ -134,6 +147,7 @@ def main() -> None:
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Tic Tac Toe (Pygame)")
     clock = pygame.time.Clock()
+    font = pygame.font.Font("font\Pixeltype.ttf", 50)
 
     # draw the board ONCE; do not redraw every frame
     draw_grid(screen)
@@ -141,6 +155,9 @@ def main() -> None:
     # simple game state so marks persist visually
     board: list[str] = [EMPTY_SPACE] * 9
     turn: str = "X"  # alternate between X and O
+
+    # initial status
+    draw_status(screen, font, f"Turn: {turn}")
 
     running: bool = True
     while running:
@@ -169,13 +186,18 @@ def main() -> None:
                 # ---------- Check the winner or tie ---------- #
                 win: str | None = winner(board)
                 if win: # this one declare winner: X or O
-                    print(f"{win} win!")
-                    running = False
+                    # print(f"{win} win!")
+                    draw_status(screen, font, f"Winner is {win}")
+                    # running = False
+                    continue
 
                 if EMPTY_SPACE not in board: # This one declare tie
                     print("It's a tie!")
-                    running = False
+                    draw_status(screen, font, f"Game is tie")
                     continue
+
+                # update status for next turn
+                draw_status(screen, font, f"Turn: {turn}")
 
     pygame.quit()
 
