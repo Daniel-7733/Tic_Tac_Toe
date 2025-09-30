@@ -1,7 +1,6 @@
 import pygame
-from sqlalchemy import false
-
 from core.game import WIN_LINES
+from button import Button
 
 
 
@@ -136,28 +135,35 @@ def draw_status(screen: pygame.Surface, font: pygame.font.Font, text: str) -> No
 # TODO: Make the reset button that when user press it, game will reset and they can play again.
 # Clean the board: just bring back the first board
 # Button needs to come after the game result.
-# ---------------------------- Executing Game Functions ---------------------------- #
-def main() -> None:
-    """
-    Just executing all functions here.
-    :return: None
-    """
+def restart_game(screen, font):
+    draw_grid(screen)
+    draw_status(screen, font, "Turn: X")
+    return [EMPTY_SPACE] * 9, "X", False  # board, turn, game_over
 
+def main() -> None:
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Tic Tac Toe (Pygame)")
     clock = pygame.time.Clock()
-    font = pygame.font.Font("font\Pixeltype.ttf", 50)
+    font = pygame.font.Font(r"font\Pixeltype.ttf", 50)
 
-    # draw the board ONCE; do not redraw every frame
-    draw_grid(screen)
+    btn_width, btn_height = 150, 40
+    btn_x: int = WIDTH - btn_width - MARGIN  # push to right edge, with some margin
+    btn_y: int = 8  # near the top
 
-    # simple game state so marks persist visually
-    board: list[str] = [EMPTY_SPACE] * 9
-    turn: str = "X"  # alternate between X and O
+    btn: Button = Button(
+        screen=screen,
+        rect=(btn_x, btn_y, btn_width, btn_height),
+        text="Restart",
+        font=font,
+        fill=(245, 245, 245),
+        text_color=(0, 0, 0),
+        border_color=(0, 0, 0),
+        border_width=2,
+    )
 
-    # initial status
-    draw_status(screen, font, f"Turn: {turn}")
+    # initial draw
+    board, turn, game_over = restart_game(screen, font)
 
     running: bool = True
     while running:
@@ -165,14 +171,18 @@ def main() -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            # --- Button events ---
+            if btn.handle_event(event):
+                # Restart clicked
+                board, turn, game_over = restart_game(screen, font)
+
+            # --- Mouse click on board ---
+            if not game_over and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 idx: int = cell_from_mouse(event.pos)
                 if idx != -1 and board[idx] == " ":
-                    # draw once, do NOT redraw the grid afterward
                     if turn == "X":
                         draw_sign_x(screen, idx)
                         board[idx] = "X"
@@ -181,25 +191,23 @@ def main() -> None:
                         draw_sign_o(screen, idx)
                         board[idx] = "O"
                         turn = "X"
-                    print(f"Clicked cell index: {idx}")
 
-                # ---------- Check the winner or tie ---------- #
-                win: str | None = winner(board)
-                if win: # this one declare winner: X or O
-                    # print(f"{win} win!")
-                    draw_status(screen, font, f"Winner is {win}")
-                    # running = False
-                    continue
+                    # winner / tie check immediately after move
+                    w: str | None = winner(board)
+                    if w:
+                        draw_status(screen, font, f"Winner: {w}")
+                        game_over = True
+                    elif " " not in board:
+                        draw_status(screen, font, "It's a tie!")
+                        game_over = True
+                    else:
+                        draw_status(screen, font, f"Turn: {turn}")
 
-                if EMPTY_SPACE not in board: # This one declare tie
-                    print("It's a tie!")
-                    draw_status(screen, font, f"Game is tie")
-                    continue
-
-                # update status for next turn
-                draw_status(screen, font, f"Turn: {turn}")
+        # Draw the button every frame so hover state is visible and it stays on top
+        btn.draw()
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()
