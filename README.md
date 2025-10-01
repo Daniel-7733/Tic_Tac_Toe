@@ -34,16 +34,19 @@ tic_tac_toe/
 │  └─ main.py           # Your current terminal game
 ├─ ui_pygame/
 │  ├─ main.py           # New Pygame front-end 
-│  └─ img/
-│     └─ board.jpeg        
+│  └─ font/             
+│  │  └─ Pixeltype.ttf 
+│  └─ img/              # Pictures are from google - I download from free websites
+│     └─ forestBackground.jpg
+│     └─ GameBackground.jpg           
 ├─ README.md      # Project description
 └─ requirements.txt
 ```
 
 ## 📖 Future Improvements
 - Add single-player mode (AI opponent)
-- GUI version with Tkinter or PyGame
-- Online multiplayer option
+- GUI version with PyGame
+- Online multiplayer option # Not made yet
 
 ## 🛠️ Technologies Used
 - Python 3.x
